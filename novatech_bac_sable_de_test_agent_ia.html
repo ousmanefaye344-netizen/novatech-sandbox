@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaTech Cloud — Plateforme SaaS & Bac à Sable Agent IA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Police Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        nova: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Styles personnalisés pour les animations et scrollbars */
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.25); opacity: 1; }
+        }
+        .typing-dot:nth-child(1) { animation: pulse-dot 1.2s infinite 0s; }
+        .typing-dot:nth-child(2) { animation: pulse-dot 1.2s infinite 0.2s; }
+        .typing-dot:nth-child(3) { animation: pulse-dot 1.2s infinite 0.4s; }
+
+        /* Scrollbar fine pour le chat et les logs */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden">
+
+    <!-- ==========================================
+         BARRE D'OUTILS BAC À SABLE (SANDBOX BAR)
+         ========================================== -->
+    <div class="bg-indigo-950/90 border-b border-indigo-500/30 backdrop-blur-md sticky top-0 z-40 px-4 py-2.5 text-xs sm:text-sm">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    Environnement Sandbox IA
+                </span>
+                <span class="text-slate-300 hidden md:inline">
+                    Mode actif : <strong id="active-mode-badge" class="text-white font-mono bg-slate-800 px-2 py-0.5 rounded">Simulateur Intelligent Local</strong>
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="copyKnowledgeBase()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" title="Copier tout le texte du site pour le donner en prompt système à votre IA">
+                    <i class="fa-regular fa-copy text-indigo-400"></i>
+                    <span>Copier le contexte du site</span>
+                </button>
+                <button onclick="toggleConfigDrawer()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-500/30 transition cursor-pointer">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Configurer l'Agent / API</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         NAVIGATION DU SITE FICTIF NOVATECH
+         ========================================== -->
+    <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-[45px] z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2.5 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition">
+                    <i class="fa-solid fa-bolt text-white text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-bold tracking-tight text-white">Nova<span class="text-indigo-400">Tech</span></span>
+                    <span class="block text-[10px] uppercase tracking-widest text-slate-400 -mt-1">Cloud & AI Solutions</span>
+                </div>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+                <a href="#services" class="hover:text-white transition">Services</a>
+                <a href="#tarifs" class="hover:text-white transition">Tarifs</a>
+                <a href="#donnees-ia" class="hover:text-white transition">Politiques & SLA</a>
+                <a href="#faq" class="hover:text-white transition">FAQ</a>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <button onclick="openChatWithPrompt('Bonjour ! Je voudrais une démonstration de NovaTech.')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium border border-slate-700 transition">
+                    Parler à un expert IA
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==========================================
+         CONTENU PRINCIPAL DU SITE (BASE DE CONNAISSANCES)
+         ========================================== -->
+    <main id="site-knowledge-content">
+
+        <!-- HERO SECTION -->
+        <section class="relative pt-16 pb-24 lg:pt-24 lg:pb-32 overflow-hidden">
+            <!-- Effets lumineux d'arrière-plan -->
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-600/20 blur-[130px] rounded-full pointer-events-none"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-medium mb-6">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Nouveau : Déploiement de clusters GPU en 45 secondes à Paris (EU-West-3)</span>
+                </div>
+
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
+                    L'infrastructure Cloud & IA pensée pour les <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">équipes ambitieuses</span>.
+                </h1>
+
+                <p class="mt-6 text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                    NovaTech propulse plus de 4 500 entreprises européennes avec un hébergement Cloud souverain, une automatisation IA clé en main et une cybersécurité certifiée ISO 27001 & HDS.
+                </p>
+
+                <!-- Boutons d'action & raccourcis de test -->
+                <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+                    <button onclick="toggleChat(true)" class="px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/30 flex items-center gap-2.5 transition transform hover:-translate-y-0.5 cursor-pointer">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Tester le Chatbot maintenant</span>
+                    </button>
+                    <a href="#tarifs" class="px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold border border-slate-700 transition">
+                        Découvrir nos tarifs
+                    </a>
+                </div>
+
+                <!-- Suggestions de questions rapides pour tester le bot -->
+                <div class="mt-12 max-w-3xl mx-auto bg-slate-900/80 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-3 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-flask"></i>
+                        Questions types à poser au chatbot pour tester sa compréhension du site :
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button onclick="openChatWithPrompt('Quels sont vos tarifs mensuels et que contient le plan Pro ?')" class="text-xs bg-slate-800 hover:bg-indigo-950 hover:text-indigo-300 hover:border-indigo-500/40 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition cursor-pointer">
+                            💰 "Quels sont vos tarifs et le plan Pro ?"
+                        </button>
+                        <button onclick="openChatWithPrompt('Où sont hébergées les données et êtes-vous conformes RGPD ?')" class="text-xs bg-slate-800 hover:bg-indigo-950 hover:text-indigo-300 hover:border-indigo-500/40 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition cursor-pointer">
+                            🔒 "Où sont hébergées vos données (RGPD) ?"
+                        </button>
+                        <button onclick="openChatWithPrompt('Quelle est votre politique de remboursement et de résiliation ?')" class="text-xs bg-slate-800 hover:bg-indigo-950 hover:text-indigo-300 hover:border-indigo-500/40 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition cursor-pointer">
+                            🔄 "Politique de remboursement ?"
+                        </button>
+                        <button onclick="openChatWithPrompt('Je veux suivre ma commande #NT-8492 ou ouvrir un ticket support.')" class="text-xs bg-slate-800 hover:bg-indigo-950 hover:text-indigo-300 hover:border-indigo-500/40 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition cursor-pointer">
+                            📦 "Suivre la commande #NT-8492"
+                        </button>
+                        <button onclick="openChatWithPrompt('Quels sont vos horaires de support et votre numéro de téléphone ?')" class="text-xs bg-slate-800 hover:bg-indigo-950 hover:text-indigo-300 hover:border-indigo-500/40 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition cursor-pointer">
+                            📞 "Horaires et contact du support ?"
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION SERVICES -->
+        <section id="services" class="py-20 bg-slate-900/50 border-y border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-indigo-400 font-semibold text-sm uppercase tracking-wider">Nos Solutions</h2>
+                    <p class="mt-2 text-3xl sm:text-4xl font-bold text-white">Tout l'écosystème technologique de NovaTech</p>
+                    <p class="mt-4 text-slate-400">Ces informations servent de base de connaissances produit pour votre agent conversationnel.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Service 1 -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-7 hover:border-indigo-500/50 transition group">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xl mb-6 group-hover:bg-indigo-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3">1. NovaCloud Souverain</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+                            Infrastructure Cloud haute disponibilité hébergée exclusivement en France (Datacenters Tier-IV à Paris, Lyon et Lille). Latence moyenne inférieure à 8ms.
+                        </p>
+                        <ul class="space-y-2 text-xs text-slate-300 border-t border-slate-800 pt-4">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Kubernetes managé auto-scalable</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Stockage NVMe chiffré AES-256</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Garantie de disponibilité (SLA) de 99,99%</li>
+                        </ul>
+                    </div>
+
+                    <!-- Service 2 -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-7 hover:border-indigo-500/50 transition group">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xl mb-6 group-hover:bg-purple-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3">2. NovaAI Studio & RAG</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+                            Déployez vos propres agents IA privés connectés à vos documents d'entreprise (Notion, Google Drive, CRM Salesforce, Zendesk) sans fuite de données.
+                        </p>
+                        <ul class="space-y-2 text-xs text-slate-300 border-t border-slate-800 pt-4">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Indexation vectorielle en temps réel</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Compatible OpenAI, Claude, Mistral & Gemini</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Zéro entraînement sur les données clients</li>
+                        </ul>
+                    </div>
+
+                    <!-- Service 3 -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-7 hover:border-indigo-500/50 transition group">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl mb-6 group-hover:bg-emerald-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3">3. CyberShield 24/7 (SOC)</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+                            Protection anti-DDoS, pare-feu applicatif (WAF) et surveillance par notre équipe d'experts en cybersécurité 24h/24 et 7j/7.
+                        </p>
+                        <ul class="space-y-2 text-xs text-slate-300 border-t border-slate-800 pt-4">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Certifications ISO 27001, HDS et SecNumCloud</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Tests d'intrusion (Pentest) trimestriels</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Temps de réponse incident critique &lt; 15 min</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION TARIFS -->
+        <section id="tarifs" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-indigo-400 font-semibold text-sm uppercase tracking-wider">Grille Tarifaire Transparente</h2>
+                    <p class="mt-2 text-3xl sm:text-4xl font-bold text-white">Des forfaits adaptés à chaque étape de croissance</p>
+                    <p class="mt-3 text-slate-400 text-sm">Remise de 20% appliquée sur la facturation annuelle. Essai gratuit de 14 jours sans carte bancaire sur Starter et Pro.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+                    <!-- Plan Starter -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold text-white">Forfait Starter</h3>
+                                <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">Freelances & Startups</span>
+                            </div>
+                            <div class="mt-6 flex items-baseline gap-1">
+                                <span class="text-4xl font-extrabold text-white">29€</span>
+                                <span class="text-slate-400 text-sm">HT / mois</span>
+                            </div>
+                            <p class="mt-2 text-xs text-slate-400">Soit 278€ HT/an avec l'engagement annuel (-20%).</p>
+
+                            <ul class="mt-6 space-y-3 text-sm text-slate-300 border-t border-slate-800 pt-6">
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> Jusqu'à 3 utilisateurs inclus</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> 100 Go de stockage Cloud NVMe</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> 1 Agent IA (5 000 messages / mois)</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> Support par email (réponse sous 24h)</li>
+                                <li class="flex items-center gap-2.5 text-slate-500"><i class="fa-solid fa-xmark"></i> Pas d'accès API Webhook avancé</li>
+                            </ul>
+                        </div>
+                        <button onclick="openChatWithPrompt('Je souhaite souscrire au forfait Starter à 29€/mois. Comment ça marche ?')" class="mt-8 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm border border-slate-700 transition cursor-pointer">
+                            Demander l'essai Starter au Bot
+                        </button>
+                    </div>
+
+                    <!-- Plan Pro (Populaire) -->
+                    <div class="bg-gradient-to-b from-indigo-950/80 to-slate-900 border-2 border-indigo-500 rounded-2xl p-8 flex flex-col justify-between relative shadow-2xl shadow-indigo-500/10">
+                        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider px-4 py-1 rounded-full">
+                            Le plus populaire
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold text-white">Forfait Pro</h3>
+                                <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300">PME & Scale-ups</span>
+                            </div>
+                            <div class="mt-6 flex items-baseline gap-1">
+                                <span class="text-4xl font-extrabold text-white">99€</span>
+                                <span class="text-slate-400 text-sm">HT / mois</span>
+                            </div>
+                            <p class="mt-2 text-xs text-indigo-300">Soit 950€ HT/an avec l'engagement annuel (-20%).</p>
+
+                            <ul class="mt-6 space-y-3 text-sm text-slate-200 border-t border-indigo-500/30 pt-6">
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-emerald-400"></i> Jusqu'à 15 utilisateurs inclus</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-emerald-400"></i> 1 To (1 000 Go) de stockage NVMe</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-emerald-400"></i> 5 Agents IA (50 000 messages / mois)</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-emerald-400"></i> Accès complet API REST & Webhooks</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-emerald-400"></i> Support prioritaire 7j/7 (Chat & Email &lt; 2h)</li>
+                            </ul>
+                        </div>
+                        <button onclick="openChatWithPrompt('Quels sont les avantages du plan Pro à 99€/mois par rapport au Starter ?')" class="mt-8 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition cursor-pointer">
+                            Choisir le forfait Pro
+                        </button>
+                    </div>
+
+                    <!-- Plan Enterprise -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold text-white">Forfait Enterprise</h3>
+                                <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">Grands Comptes</span>
+                            </div>
+                            <div class="mt-6 flex items-baseline gap-1">
+                                <span class="text-4xl font-extrabold text-white">299€</span>
+                                <span class="text-slate-400 text-sm">HT / mois (dès)</span>
+                            </div>
+                            <p class="mt-2 text-xs text-slate-400">Ou tarification sur-mesure pour +100 utilisateurs.</p>
+
+                            <ul class="mt-6 space-y-3 text-sm text-slate-300 border-t border-slate-800 pt-6">
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> Utilisateurs et stockage illimités</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> Agents IA illimités & GPU dédiés</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> Hébergement sur serveur dédié isolé (HDS)</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> SLA contractuel de 99,99% avec pénalités</li>
+                                <li class="flex items-center gap-2.5"><i class="fa-solid fa-check text-indigo-400"></i> Account Manager dédié & Support 24/7 par téléphone</li>
+                            </ul>
+                        </div>
+                        <button onclick="openChatWithPrompt('Nous sommes une entreprise de 80 personnes, quel est le tarif Enterprise et proposez-vous un serveur dédié ?')" class="mt-8 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm border border-slate-700 transition cursor-pointer">
+                            Contacter l'équipe Enterprise
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION FICHE TECHNIQUE & DONNÉES ENTREPRISE (POUR TESTS D'EXTRACTION IA) -->
+        <section id="donnees-ia" class="py-16 bg-slate-900/60 border-y border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-10">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2.5">
+                        <i class="fa-solid fa-database text-indigo-400"></i>
+                        <span>Données de référence de l'entreprise (Base de Vérité pour votre Agent IA)</span>
+                    </h2>
+                    <p class="text-slate-400 text-sm mt-1">
+                        Votre agent IA peut utiliser ces données précises pour répondre aux questions pointues des visiteurs.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
+                    <div class="bg-slate-950 border border-slate-800 p-5 rounded-xl">
+                        <h3 class="font-semibold text-indigo-400 mb-2"><i class="fa-solid fa-building mr-1.5"></i> Identité & Siège</h3>
+                        <ul class="space-y-1.5 text-slate-300 text-xs">
+                            <li><strong>Raison sociale :</strong> NovaTech SAS</li>
+                            <li><strong>Siège :</strong> 42 Avenue de la République, 75011 Paris, France</li>
+                            <li><strong>Bureaux R&D :</strong> EuraTechnologies, 59000 Lille</li>
+                            <li><strong>PDG (CEO) :</strong> Claire Vance</li>
+                            <li><strong>SIRET :</strong> 892 451 002 00018</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 p-5 rounded-xl">
+                        <h3 class="font-semibold text-indigo-400 mb-2"><i class="fa-solid fa-headset mr-1.5"></i> Support & Horaires</h3>
+                        <ul class="space-y-1.5 text-slate-300 text-xs">
+                            <li><strong>Email support :</strong> support@novatech-cloud.fr</li>
+                            <li><strong>Téléphone :</strong> +33 1 88 45 90 00</li>
+                            <li><strong>Horaires Standard :</strong> Lundi au Vendredi, 9h00 - 19h00 (CET)</li>
+                            <li><strong>Astreinte Urgence :</strong> 24h/24 et 7j/7 (Plans Pro & Enterprise)</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 p-5 rounded-xl">
+                        <h3 class="font-semibold text-indigo-400 mb-2"><i class="fa-solid fa-rotate-left mr-1.5"></i> Remboursement & Contrat</h3>
+                        <ul class="space-y-1.5 text-slate-300 text-xs">
+                            <li><strong>Essai gratuit :</strong> 14 jours sans carte bancaire</li>
+                            <li><strong>Garantie :</strong> Satisfait ou remboursé pendant 30 jours</li>
+                            <li><strong>Résiliation :</strong> Sans frais à tout moment en 1 clic depuis l'espace client</li>
+                            <li><strong>Moyens de paiement :</strong> CB (Visa, Mastercard), SEPA, Virement</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 p-5 rounded-xl">
+                        <h3 class="font-semibold text-indigo-400 mb-2"><i class="fa-solid fa-box-open mr-1.5"></i> Commandes Test (Mock)</h3>
+                        <ul class="space-y-1.5 text-slate-300 text-xs">
+                            <li><strong>#NT-8492 :</strong> Serveur GPU Dédié — <em>En cours de livraison (Livraison prévue demain à 14h)</em></li>
+                            <li><strong>#NT-1024 :</strong> Licence Annuelle Pro — <em>Activée et payée (Facture disponible)</em></li>
+                            <li><strong>Code Promo Actif :</strong> <code class="bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded">NOVA2026</code> (-15% le 1er mois)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION FAQ -->
+        <section id="faq" class="py-20 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-14">
+                <h2 class="text-indigo-400 font-semibold text-sm uppercase tracking-wider">Foire Aux Questions</h2>
+                <p class="mt-2 text-3xl font-bold text-white">Questions fréquentes des clients</p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <details class="group bg-slate-900 border border-slate-800 rounded-2xl p-6 open:border-indigo-500/50 transition">
+                    <summary class="flex items-center justify-between cursor-pointer font-semibold text-white list-none">
+                        <span>Où sont hébergées mes données et celles de mes clients ?</span>
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="mt-4 text-sm text-slate-300 leading-relaxed">
+                        Toutes les données confiées à NovaTech sont hébergées à 100% en France métropolitaine dans nos datacenters certifiés Tier-IV situés à Paris, Lyon et Lille. Nous sommes entièrement conformes au RGPD européen et non soumis au Cloud Act américain.
+                    </p>
+                </details>
+
+                <!-- FAQ Item 2 -->
+                <details class="group bg-slate-900 border border-slate-800 rounded-2xl p-6 open:border-indigo-500/50 transition">
+                    <summary class="flex items-center justify-between cursor-pointer font-semibold text-white list-none">
+                        <span>Comment fonctionne la garantie satisfait ou remboursé de 30 jours ?</span>
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="mt-4 text-sm text-slate-300 leading-relaxed">
+                        En plus des 14 jours d'essai gratuit, si vous n'êtes pas pleinement satisfait durant les 30 premiers jours suivant votre premier paiement, il vous suffit d'envoyer un message au support (ou via le chatbot) pour obtenir un remboursement intégral sous 48h ouvrées, sans justificatif requis.
+                    </p>
+                </details>
+
+                <!-- FAQ Item 3 -->
+                <details class="group bg-slate-900 border border-slate-800 rounded-2xl p-6 open:border-indigo-500/50 transition">
+                    <summary class="flex items-center justify-between cursor-pointer font-semibold text-white list-none">
+                        <span>Puis-je connecter mon propre agent IA (n8n, Make, OpenAI, Webhook) ?</span>
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="mt-4 text-sm text-slate-300 leading-relaxed">
+                        Oui ! Dès le forfait Pro (99€/mois), vous disposez d'un accès complet à notre API REST et aux Webhooks sortants. D'ailleurs, sur ce site de démonstration, vous pouvez cliquer sur le bouton <strong>"Configurer l'Agent / API"</strong> en haut à droite pour brancher votre propre URL Webhook (n8n, Make, Flowise, Botpress ou votre serveur Python/Node.js).
+                    </p>
+                </details>
+
+                <!-- FAQ Item 4 -->
+                <details class="group bg-slate-900 border border-slate-800 rounded-2xl p-6 open:border-indigo-500/50 transition">
+                    <summary class="flex items-center justify-between cursor-pointer font-semibold text-white list-none">
+                        <span>Proposez-vous un code promotionnel ou une réduction pour les startups ?</span>
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="mt-4 text-sm text-slate-300 leading-relaxed">
+                        Tout à fait ! Vous pouvez utiliser le code promotionnel <strong>NOVA2026</strong> lors de votre inscription pour bénéficier de 15% de réduction immédiate sur votre premier mois, cumulable avec les 20% de remise sur l'abonnement annuel.
+                    </p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-12 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-indigo-600 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-bolt text-xs"></i>
+                </div>
+                <span class="font-semibold text-slate-300">NovaTech SAS</span>
+                <span>— Site fictif d'entraînement & Sandbox pour Agent IA.</span>
+            </div>
+            <div>
+                <span>42 Avenue de la République, 75011 Paris • support@novatech-cloud.fr</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==========================================
+         PANNEAU LATÉRAL DE CONFIGURATION SANDBOX
+         ========================================== -->
+    <div id="config-backdrop" onclick="toggleConfigDrawer(false)" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
+
+    <aside id="config-drawer" class="fixed top-0 right-0 h-full w-full max-w-lg bg-slate-900 border-l border-slate-800 z-50 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+        <!-- Header du Drawer -->
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-white">Configuration de l'Agent IA</h2>
+                    <p class="text-xs text-slate-400">Connectez votre Webhook ou configurez le simulateur</p>
+                </div>
+            </div>
+            <button onclick="toggleConfigDrawer(false)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Corps du Drawer -->
+        <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6 text-sm">
+            
+            <!-- Choix du Mode -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">1. Mode de fonctionnement du Chatbot</label>
+                <div class="grid grid-cols-1 gap-2.5">
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer hover:border-indigo-500/50 transition">
+                        <input type="radio" name="botMode" value="local" checked onchange="handleModeChange()" class="mt-1 accent-indigo-500">
+                        <div>
+                            <span class="font-semibold text-white block">Simulateur Intelligent Local (Intégré)</span>
+                            <span class="text-xs text-slate-400">Répond automatiquement aux questions sur NovaTech (tarifs, RGPD, commandes, horaires) sans serveur externe.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer hover:border-indigo-500/50 transition">
+                        <input type="radio" name="botMode" value="webhook" onchange="handleModeChange()" class="mt-1 accent-indigo-500">
+                        <div>
+                            <span class="font-semibold text-white block">Webhook Personnalisé (n8n, Make, Flowise, API...)</span>
+                            <span class="text-xs text-slate-400">Envoie une requête <code class="text-indigo-300">POST</code> JSON à votre propre point de terminaison API avec le message et l'historique.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer hover:border-indigo-500/50 transition">
+                        <input type="radio" name="botMode" value="openai" onchange="handleModeChange()" class="mt-1 accent-indigo-500">
+                        <div>
+                            <span class="font-semibold text-white block">API Compatible OpenAI (OpenAI, Mistral, Groq...)</span>
+                            <span class="text-xs text-slate-400">Appelle directement un modèle LLM en injectant automatiquement le contenu du site NovaTech dans le System Prompt.</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Configuration Mode WEBHOOK -->
+            <div id="webhook-settings" class="hidden space-y-4 bg-slate-950 p-4 rounded-xl border border-indigo-500/30">
+                <h3 class="font-semibold text-indigo-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-plug"></i> Paramètres du Webhook / API
+                </h3>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">URL du Endpoint (POST)</label>
+                    <input id="webhook-url" type="url" placeholder="https://votre-instance.n8n.cloud/webhook/chat" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Header Authorization (Optionnel)</label>
+                    <input id="webhook-auth" type="password" placeholder="Bearer sk-..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input id="webhook-include-context" type="checkbox" checked class="accent-indigo-500">
+                    <label for="webhook-include-context" class="text-xs text-slate-300">Inclure automatiquement le texte du site NovaTech dans le payload JSON (<code class="text-indigo-300">siteContext</code>)</label>
+                </div>
+                <div class="text-[11px] text-slate-400 bg-slate-900 p-3 rounded-lg border border-slate-800 font-mono">
+                    <div class="text-slate-300 font-semibold mb-1">Format JSON envoyé (POST) :</div>
+                    { "message": "...", "sessionId": "...", "history": [...], "siteContext": "..." }
+                    <div class="text-slate-300 font-semibold mt-2 mb-1">Champs de réponse acceptés :</div>
+                    { "reply": "..." } ou { "output": "..." } ou { "message": "..." } ou texte brut.
+                </div>
+            </div>
+
+            <!-- Configuration Mode OPENAI COMPATIBLE -->
+            <div id="openai-settings" class="hidden space-y-4 bg-slate-950 p-4 rounded-xl border border-purple-500/30">
+                <h3 class="font-semibold text-purple-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-microchip"></i> Connexion Directe LLM
+                </h3>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">URL Chat Completions</label>
+                    <input id="openai-url" type="url" value="https://api.openai.com/v1/chat/completions" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Clé API (Bearer)</label>
+                        <input id="openai-key" type="password" placeholder="sk-..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Nom du Modèle</label>
+                        <input id="openai-model" type="text" value="gpt-4o-mini" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Prompt Système (Instructions de l'agent)</label>
+                    <textarea id="openai-system-prompt" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">Tu es NovaBot, l'assistant IA officiel de NovaTech SAS. Réponds de manière concise, chaleureuse et précise en français en utilisant uniquement les données du site NovaTech fournies.</textarea>
+                </div>
+            </div>
+
+            <!-- Paramètres d'interface & Comportement -->
+            <div class="space-y-4 pt-2 border-t border-slate-800">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">2. Personnalisation & Latence Simulée</label>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Nom du Bot</label>
+                        <input id="bot-name-input" type="text" value="NovaBot IA" oninput="updateBotIdentity()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Délai de frappe (ms)</label>
+                        <input id="bot-delay-input" type="number" value="900" min="0" max="10000" step="100" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Simuler un état d'erreur réseau (Test de résilience UI)</label>
+                    <select id="simulate-error-select" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="none">Normal (Aucune erreur forcée)</option>
+                        <option value="timeout">Simuler une erreur 504 Gateway Timeout</option>
+                        <option value="rate_limit">Simuler une erreur 429 Quota Dépassé</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Console d'inspection des Payload JSON -->
+            <div class="space-y-2 pt-2 border-t border-slate-800">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">3. Inspecteur réseau / Logs JSON</label>
+                    <button onclick="clearLogs()" class="text-[11px] text-slate-400 hover:text-white cursor-pointer">Effacer</button>
+                </div>
+                <pre id="network-inspector" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-48 custom-scrollbar">// Les requêtes et réponses de l'agent s'afficheront ici en temps réel...</pre>
+            </div>
+        </div>
+
+        <!-- Footer du Drawer -->
+        <div class="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between gap-3">
+            <button onclick="resetChat()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition cursor-pointer">
+                <i class="fa-solid fa-trash-can mr-1.5"></i> Réinitialiser la conversation
+            </button>
+            <button onclick="toggleConfigDrawer(false)" class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition cursor-pointer">
+                Enregistrer & Fermer
+            </button>
+        </div>
+    </aside>
+
+    <!-- ==========================================
+         WIDGET DE CHAT FLOTTANT (EN BAS À DROITE)
+         ========================================== -->
+    <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end">
+        
+        <!-- Fenêtre de Chat -->
+        <div id="chat-window" class="w-[calc(100vw-2.5rem)] sm:w-[400px] h-[560px] max-h-[calc(100vh-6rem)] bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden mb-4 transition-all duration-300 origin-bottom-right scale-95 opacity-0 pointer-events-none hidden">
+            
+            <!-- En-tête du Chat -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 flex items-center justify-between text-white">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-lg border border-white/20">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <span class="w-3 h-3 rounded-full bg-emerald-400 border-2 border-indigo-600 absolute bottom-0 right-0"></span>
+                    </div>
+                    <div>
+                        <h3 id="chat-header-name" class="font-bold text-sm leading-tight">NovaBot IA</h3>
+                        <p id="chat-header-mode" class="text-[11px] text-indigo-100 opacity-90">Mode : Simulateur Local • En ligne</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="toggleConfigDrawer(true)" title="Paramètres de l'agent IA" class="w-8 h-8 rounded-lg hover:bg-white/15 flex items-center justify-center text-white/90 transition cursor-pointer">
+                        <i class="fa-solid fa-gear text-xs"></i>
+                    </button>
+                    <button onclick="resetChat()" title="Effacer l'historique" class="w-8 h-8 rounded-lg hover:bg-white/15 flex items-center justify-center text-white/90 transition cursor-pointer">
+                        <i class="fa-solid fa-rotate-right text-xs"></i>
+                    </button>
+                    <button onclick="toggleChat(false)" title="Fermer le chat" class="w-8 h-8 rounded-lg hover:bg-white/15 flex items-center justify-center text-white/90 transition cursor-pointer">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Zone des messages -->
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto custom-scrollbar space-y-4 bg-slate-950/60">
+                <!-- Les messages sont injectés dynamiquement par JS -->
+            </div>
+
+            <!-- Indicateur de frappe (Typing indicator) -->
+            <div id="typing-indicator" class="hidden px-4 py-2 bg-slate-950/60 border-t border-slate-800/50">
+                <div class="inline-flex items-center gap-2 bg-slate-800/90 border border-slate-700 px-3.5 py-2 rounded-2xl rounded-tl-sm">
+                    <div class="flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 typing-dot"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 typing-dot"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 typing-dot"></span>
+                    </div>
+                    <span class="text-[11px] text-slate-400">L'agent rédige une réponse...</span>
+                </div>
+            </div>
+
+            <!-- Suggestions rapides dans le chat -->
+            <div class="px-3 py-2 bg-slate-900 border-t border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
+                <button onclick="sendQuickMessage('Tarifs ?')" class="shrink-0 px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-600/30 hover:text-indigo-300 text-slate-300 border border-slate-700 transition cursor-pointer">💰 Tarifs</button>
+                <button onclick="sendQuickMessage('Commande #NT-8492')" class="shrink-0 px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-600/30 hover:text-indigo-300 text-slate-300 border border-slate-700 transition cursor-pointer">📦 #NT-8492</button>
+                <button onclick="sendQuickMessage('Remboursement ?')" class="shrink-0 px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-600/30 hover:text-indigo-300 text-slate-300 border border-slate-700 transition cursor-pointer">🔄 Remboursement</button>
+                <button onclick="sendQuickMessage('Code promo ?')" class="shrink-0 px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-600/30 hover:text-indigo-300 text-slate-300 border border-slate-700 transition cursor-pointer">🎁 Code Promo</button>
+            </div>
+
+            <!-- Formulaire de saisie -->
+            <form id="chat-form" onsubmit="handleChatSubmit(event)" class="p-3 bg-slate-900 border-t border-slate-800 flex items-end gap-2">
+                <textarea 
+                    id="chat-input" 
+                    rows="1" 
+                    placeholder="Écrivez votre message ici..." 
+                    onkeydown="handleInputKeydown(event)"
+                    class="flex-1 bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none resize-none max-h-28 custom-scrollbar"
+                ></textarea>
+                <button type="submit" id="send-btn" class="w-10 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white flex items-center justify-center shrink-0 transition shadow-md shadow-indigo-600/30 cursor-pointer">
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Bouton Flottant (Launcher) -->
+        <button id="chat-launcher" onclick="toggleChat()" class="group relative w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-600/40 flex items-center justify-center transition-all duration-300 hover:scale-105 cursor-pointer">
+            <i id="launcher-icon" class="fa-solid fa-comment-dots text-2xl transition-transform duration-300"></i>
+            <!-- Badge de notification -->
+            <span id="unread-badge" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-slate-950">1</span>
+        </button>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 left-6 z-50 bg-slate-900 border border-indigo-500/50 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toast-message">Action effectuée</span>
+    </div>
+
+    <!-- ==========================================
+         LOGIQUE JAVASCRIPT DU BAC À SABLE & CHATBOT
+         ========================================== -->
+    <script>
+        // État global de la session de test
+        const state = {
+            isChatOpen: false,
+            isConfigOpen: false,
+            mode: 'local', // 'local' | 'webhook' | 'openai'
+            sessionId: 'sess_' + Math.random().toString(36).substring(2, 10),
+            botName: 'NovaBot IA',
+            history: []
+        };
+
+        // Base de connaissances structurée du site (utilisée par le simulateur et exportable en contexte)
+        const SITE_CONTEXT_SUMMARY = `
+ENTREPRISE : NovaTech SAS (PDG : Claire Vance).
+SIÈGE : 42 Avenue de la République, 75011 Paris. Bureaux R&D à EuraTechnologies Lille. SIRET : 892 451 002 00018.
+SERVICES :
+1. NovaCloud Souverain : Hébergement 100% en France (Paris, Lyon, Lille), certifié Tier-IV, Kubernetes managé, SLA 99.99%.
+2. NovaAI Studio & RAG : Déploiement d'agents IA privés connectés aux outils d'entreprise (Notion, Drive, Salesforce) sans entraînement sur les données clients.
+3. CyberShield 24/7 : Cybersécurité certifiée ISO 27001, HDS et SecNumCloud, protection DDoS et réponse incident < 15 min.
+TARIFS (HT/mois, remise de -20% en annuel) :
+- Starter : 29€/mois (278€/an) -> 3 utilisateurs, 100 Go NVMe, 1 Agent IA (5 000 msg/mois), support email 24h.
+- Pro (Plus populaire) : 99€/mois (950€/an) -> 15 utilisateurs, 1 To NVMe, 5 Agents IA (50 000 msg/mois), API REST & Webhooks inclus, support 7j/7 < 2h.
+- Enterprise : dès 299€/mois -> Utilisateurs/stockage illimités, serveurs dédiés HDS, SLA 99.99%, Account Manager & support téléphone 24/7.
+POLITIQUES :
+- Essai gratuit de 14 jours sans carte bancaire.
+- Garantie satisfait ou remboursé pendant 30 jours (remboursement sous 48h).
+- Résiliation en 1 clic sans frais.
+CONTACT & HORAIRES :
+- Email : support@novatech-cloud.fr | Téléphone : +33 1 88 45 90 00
+- Horaires : Lundi-Vendredi 9h00-19h00 CET (24/7 pour Pro et Enterprise).
+COMMANDES MOCK & PROMO :
+- Commande #NT-8492 : Serveur GPU Dédié, en cours de livraison (prévue demain à 14h).
+- Commande #NT-1024 : Licence Annuelle Pro, activée et payée.
+- Code promo actif : NOVA2026 (-15% sur le 1er mois).
+        `.trim();
+
+        // Initialisation au chargement de la page
+        window.onload = function() {
+            resetChat();
+        };
+
+        // Ouvrir / Fermer la fenêtre de chat
+        function toggleChat(forceState) {
+            const chatWindow = document.getElementById('chat-window');
+            const launcherIcon = document.getElementById('launcher-icon');
+            const unreadBadge = document.getElementById('unread-badge');
+
+            state.isChatOpen = typeof forceState === 'boolean' ? forceState : !state.isChatOpen;
+
+            if (state.isChatOpen) {
+                chatWindow.classList.remove('hidden');
+                setTimeout(() => {
+                    chatWindow.classList.remove('scale-95', 'opacity-0', 'pointer-events-none');
+                    chatWindow.classList.add('scale-100', 'opacity-100');
+                }, 10);
+                launcherIcon.className = 'fa-solid fa-xmark text-2xl transition-transform duration-300 rotate-90';
+                unreadBadge.classList.add('hidden');
+                setTimeout(() => document.getElementById('chat-input').focus(), 150);
+            } else {
+                chatWindow.classList.remove('scale-100', 'opacity-100');
+                chatWindow.classList.add('scale-95', 'opacity-0', 'pointer-events-none');
+                setTimeout(() => chatWindow.classList.add('hidden'), 280);
+                launcherIcon.className = 'fa-solid fa-comment-dots text-2xl transition-transform duration-300';
+            }
+        }
+
+        // Ouvrir le chat et envoyer immédiatement une question de test
+        function openChatWithPrompt(promptText) {
+            if (!state.isChatOpen) {
+                toggleChat(true);
+            }
+            setTimeout(() => {
+                sendQuickMessage(promptText);
+            }, 250);
+        }
+
+        // Ouvrir / Fermer le tiroir de configuration
+        function toggleConfigDrawer(forceState) {
+            const drawer = document.getElementById('config-drawer');
+            const backdrop = document.getElementById('config-backdrop');
+            state.isConfigOpen = typeof forceState === 'boolean' ? forceState : !state.isConfigOpen;
+
+            if (state.isConfigOpen) {
+                backdrop.classList.remove('hidden');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    drawer.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('translate-x-full');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        // Changement du mode (Local / Webhook / OpenAI)
+        function handleModeChange() {
+            const selected = document.querySelector('input[name="botMode"]:checked').value;
+            state.mode = selected;
+
+            const webhookBox = document.getElementById('webhook-settings');
+            const openaiBox = document.getElementById('openai-settings');
+            const activeBadge = document.getElementById('active-mode-badge');
+            const headerMode = document.getElementById('chat-header-mode');
+
+            webhookBox.classList.add('hidden');
+            openaiBox.classList.add('hidden');
+
+            if (selected === 'local') {
+                activeBadge.textContent = 'Simulateur Intelligent Local';
+                headerMode.textContent = 'Mode : Simulateur Local • En ligne';
+            } else if (selected === 'webhook') {
+                webhookBox.classList.remove('hidden');
+                activeBadge.textContent = 'Webhook API Externe';
+                headerMode.textContent = 'Mode : Webhook API Connecté';
+            } else if (selected === 'openai') {
+                openaiBox.classList.remove('hidden');
+                activeBadge.textContent = 'LLM Direct (Compatible OpenAI)';
+                headerMode.textContent = 'Mode : LLM Direct Connecté';
+            }
+        }
+
+        // Mettre à jour le nom du bot
+        function updateBotIdentity() {
+            const nameInput = document.getElementById('bot-name-input').value.trim() || 'NovaBot IA';
+            state.botName = nameInput;
+            document.getElementById('chat-header-name').textContent = nameInput;
+        }
+
+        // Réinitialiser la conversation
+        function resetChat() {
+            state.sessionId = 'sess_' + Math.random().toString(36).substring(2, 10);
+            state.history = [];
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+
+            const welcomeMsg = "Bonjour ! 👋 Je suis **" + state.botName + "**, l'assistant virtuel de **NovaTech**. Je connais tous nos services Cloud & IA, nos tarifs, notre politique RGPD et le suivi de vos commandes. Comment puis-je vous aider aujourd'hui ?";
+            appendMessage('assistant', welcomeMsg);
+        }
+
+        // Gérer la touche Entrée dans le textarea
+        function handleInputKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleChatSubmit(event);
+            }
+        }
+
+        // Envoyer un message rapide
+        function sendQuickMessage(text) {
+            const input = document.getElementById('chat-input');
+            input.value = text;
+            handleChatSubmit(new Event('submit'));
+        }
+
+        // Soumission du formulaire de chat
+        async function handleChatSubmit(event) {
+            if (event) event.preventDefault();
+            const input = document.getElementById('chat-input');
+            const userText = input.value.trim();
+            if (!userText) return;
+
+            input.value = '';
+            appendMessage('user', userText);
+
+            const typingIndicator = document.getElementById('typing-indicator');
+            const sendBtn = document.getElementById('send-btn');
+            typingIndicator.classList.remove('hidden');
+            sendBtn.disabled = true;
+            scrollToBottom();
+
+            const simulatedDelay = parseInt(document.getElementById('bot-delay-input').value || '800', 10);
+            const forcedError = document.getElementById('simulate-error-select').value;
+
+            try {
+                // Attente artificielle pour simuler le temps de réflexion
+                if (simulatedDelay > 0) {
+                    await new Promise(r => setTimeout(r, simulatedDelay));
+                }
+
+                // Vérifier si l'utilisateur teste une erreur forcée
+                if (forcedError === 'timeout') {
+                    throw new Error('504 Gateway Timeout : Le serveur de votre agent IA a mis trop de temps à répondre.');
+                } else if (forcedError === 'rate_limit') {
+                    throw new Error('429 Too Many Requests : Quota d\'appels API dépassé.');
+                }
+
+                let botReply = '';
+
+                if (state.mode === 'local') {
+                    botReply = generateLocalSimulatedReply(userText);
+                    logInspector({
+                        mode: 'local_simulator',
+                        sessionId: state.sessionId,
+                        userMessage: userText,
+                        botReply: botReply
+                    });
+                } else if (state.mode === 'webhook') {
+                    botReply = await callCustomWebhook(userText);
+                } else if (state.mode === 'openai') {
+                    botReply = await callOpenAICompatible(userText);
+                }
+
+                appendMessage('assistant', botReply);
+            } catch (err) {
+                appendMessage('error', `⚠️ **Erreur de communication avec l'Agent IA :**\n${err.message}`);
+                logInspector({ error: err.message, timestamp: new Date().toISOString() });
+            } finally {
+                typingIndicator.classList.add('hidden');
+                sendBtn.disabled = false;
+                scrollToBottom();
+            }
+        }
+
+        // Ajouter une bulle de message dans le chat (avec support Markdown basique)
+        function appendMessage(role, text) {
+            const container = document.getElementById('chat-messages');
+            const wrapper = document.createElement('div');
+            const timeStr = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+            // Sauvegarder dans l'historique
+            if (role === 'user' || role === 'assistant') {
+                state.history.push({ role, content: text, timestamp: timeStr });
+            }
+
+            const formattedHtml = formatSimpleMarkdown(text);
+
+            if (role === 'user') {
+                wrapper.className = 'flex flex-col items-end';
+                wrapper.innerHTML = `
+                    <div class="max-w-[85%] bg-indigo-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm text-sm leading-relaxed shadow-sm">
+                        ${formattedHtml}
+                    </div>
+                    <span class="text-[10px] text-slate-500 mt-1 mr-1">Vous • ${timeStr}</span>
+                `;
+            } else if (role === 'assistant') {
+                wrapper.className = 'flex flex-col items-start';
+                wrapper.innerHTML = `
+                    <div class="max-w-[88%] bg-slate-800 border border-slate-700/80 text-slate-100 px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm leading-relaxed shadow-sm">
+                        ${formattedHtml}
+                    </div>
+                    <span class="text-[10px] text-slate-500 mt-1 ml-1">${escapeHtml(state.botName)} • ${timeStr}</span>
+                `;
+            } else if (role === 'error') {
+                wrapper.className = 'flex flex-col items-center';
+                wrapper.innerHTML = `
+                    <div class="w-full bg-rose-950/80 border border-rose-500/40 text-rose-200 px-3.5 py-2.5 rounded-xl text-xs leading-relaxed">
+                        ${formattedHtml}
+                    </div>
+                `;
+            }
+
+            container.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        // Moteur de simulation locale intelligent basé sur le contenu de NovaTech
+        function generateLocalSimulatedReply(query) {
+            const q = query.toLowerCase();
+
+            if (q.includes('tarif') || q.includes('prix') || q.includes('combien') || q.includes('forfait') || q.includes('starter') || q.includes('pro') || q.includes('enterprise') || q.includes('abonnement')) {
+                return `Voici nos 3 forfaits **NovaTech** (avec **-20%** sur la facturation annuelle) :\n\n• **Starter (29€ HT/mois)** : Idéal pour démarrer (3 utilisateurs, 100 Go NVMe, 1 Agent IA / 5 000 messages).\n• **Pro (99€ HT/mois - Populaire)** : Pour les PME (15 utilisateurs, 1 To NVMe, 5 Agents IA / 50 000 messages, accès **API & Webhooks**, support 7j/7 < 2h).\n• **Enterprise (dès 299€ HT/mois)** : Utilisateurs et agents illimités, serveur dédié certifié HDS et SLA de 99,99%.\n\n💡 *Astuce : Vous bénéficiez de 14 jours d'essai gratuit sans carte bancaire !*`;
+            }
+
+            if (q.includes('rgpd') || q.includes('donnée') || q.includes('héberg') || q.includes('ou sont') || q.includes('où sont') || q.includes('france') || q.includes('sécurité') || q.includes('iso')) {
+                return `🔒 **Souveraineté & RGPD garantis :**\nToutes vos données sont hébergées à **100% en France** dans nos datacenters Tier-IV situés à **Paris, Lyon et Lille**.\n\nNous sommes certifiés **ISO 27001, HDS (Données de Santé) et SecNumCloud**, et nous garantissons contractuellement qu'aucune donnée client n'est utilisée pour entraîner des modèles d'IA publics.`;
+            }
+
+            if (q.includes('rembours') || q.includes('résili') || q.includes('annul') || q.includes('essai') || q.includes('garantie')) {
+                return `🔄 **Politique de remboursement & résiliation :**\n• **Essai gratuit :** 14 jours sans carte bancaire.\n• **Garantie 30 jours :** Si vous n'êtes pas satisfait durant vos 30 premiers jours d'abonnement, nous vous remboursons intégralement sous **48h ouvrées** sur simple demande.\n• **Résiliation :** Sans engagement, résiliable en 1 clic depuis votre espace client.`;
+            }
+
+            if (q.includes('8492') || q.includes('1024') || q.includes('commande') || q.includes('suivi') || q.includes('livraison')) {
+                if (q.includes('1024')) {
+                    return `📦 **Statut de la commande #NT-1024 :**\nVotre **Licence Annuelle Pro** est **Activée et payée**. Votre facture est téléchargeable dans votre espace client.`;
+                }
+                return `📦 **Suivi de commande NovaTech :**\nJ'ai trouvé la commande **#NT-8492** (*Serveur GPU Dédié*) :\n• **Statut :** En cours de provisionnement et livraison.\n• **Mise en service prévue :** Demain à **14h00**.\n\n*(Vous pouvez aussi tester la référence #NT-1024).*`;
+            }
+
+            if (q.includes('promo') || q.includes('code') || q.includes('réduction') || q.includes('remise')) {
+                return `🎁 **Offre promotionnelle active :**\nVous pouvez utiliser le code promo **NOVA2026** lors de votre souscription pour obtenir **-15% de réduction immédiate** sur votre premier mois (cumulable avec les -20% de l'abonnement annuel) !`;
+            }
+
+            if (q.includes('contact') || q.includes('horaire') || q.includes('téléphone') || q.includes('email') || q.includes('support') || q.includes('adresse') || q.includes('siège')) {
+                return `📞 **Coordonnées & Support NovaTech :**\n• **Email :** support@novatech-cloud.fr\n• **Téléphone :** +33 1 88 45 90 00\n• **Horaires :** Du lundi au vendredi de **9h00 à 19h00 (CET)** (Astreinte 24h/24 et 7j/7 pour les plans Pro et Enterprise).\n• **Siège social :** 42 Avenue de la République, 75011 Paris (R&D à EuraTechnologies Lille).`;
+            }
+
+            if (q.includes('pdg') || q.includes('ceo') || q.includes('qui dirige') || q.includes('fondateur') || q.includes('siret')) {
+                return `🏢 **NovaTech SAS** est dirigée par **Claire Vance** (PDG / CEO). Notre numéro SIRET est le **892 451 002 00018** et nous accompagnons aujourd'hui plus de 4 500 entreprises européennes.`;
+            }
+
+            if (q.includes('webhook') || q.includes('api') || q.includes('connecter') || q.includes('n8n') || q.includes('make')) {
+                return `🔌 **Tester votre propre Agent IA sur ce site :**\nCliquez sur le bouton **"Configurer l'Agent / API"** en haut à droite de la page. Vous pourrez y coller l'URL de votre Webhook (**n8n, Make, Flowise, Botpress, serveur Node/Python**) ou une clé API compatible OpenAI !`;
+            }
+
+            return `Merci pour votre message ! En tant que simulateur local de **NovaTech**, je peux vous renseigner sur :\n• Nos **tarifs** (Starter à 29€, Pro à 99€, Enterprise à 299€)\n• L'**hébergement souverain RGPD** (Paris, Lyon, Lille)\n• Le suivi des commandes **#NT-8492** et **#NT-1024**\n• Notre garantie **satisfait ou remboursé de 30 jours** et le code promo **NOVA2026**.\n\n*💡 Pour connecter votre propre IA à ce widget, cliquez sur "Configurer l'Agent / API" en haut à droite.*`;
+        }
+
+        // Appel d'un Webhook personnalisé (n8n, Make, API externe)
+        async function callCustomWebhook(userText) {
+            const url = document.getElementById('webhook-url').value.trim();
+            const auth = document.getElementById('webhook-auth').value.trim();
+            const includeContext = document.getElementById('webhook-include-context').checked;
+
+            if (!url) {
+                throw new Error('Veuillez renseigner une URL de Webhook valide dans le panneau "Configurer l\'Agent / API".');
+            }
+
+            const payload = {
+                message: userText,
+                sessionId: state.sessionId,
+                timestamp: new Date().toISOString(),
+                history: state.history,
+                ...(includeContext ? { siteContext: SITE_CONTEXT_SUMMARY } : {})
+            };
+
+            const headers = { 'Content-Type': 'application/json' };
+            if (auth) headers['Authorization'] = auth;
+
+            logInspector({ SendingToWebhook: url, payload });
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status} (${response.statusText}) depuis le Webhook.`);
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+                logInspector({ WebhookResponse: data });
+
+                // Supporte les formats de retour courants (n8n, Flowise, Make, API custom)
+                const reply = data.reply || data.output || data.message || data.text || data.response || (Array.isArray(data) && (data[0]?.output || data[0]?.reply || data[0]?.text));
+                return typeof reply === 'string' ? reply : JSON.stringify(data, null, 2);
+            } else {
+                const rawText = await response.text();
+                logInspector({ WebhookRawResponse: rawText });
+                return rawText || '(Réponse vide reçue du Webhook)';
+            }
+        }
+
+        // Appel direct d'un point de terminaison compatible OpenAI Chat Completions
+        async function callOpenAICompatible(userText) {
+            const url = document.getElementById('openai-url').value.trim();
+            const apiKey = document.getElementById('openai-key').value.trim();
+            const model = document.getElementById('openai-model').value.trim() || 'gpt-4o-mini';
+            const sysPrompt = document.getElementById('openai-system-prompt').value.trim();
+
+            if (!apiKey) {
+                throw new Error('Veuillez saisir votre clé API (Bearer) dans la configuration LLM Direct.');
+            }
+
+            const messages = [
+                {
+                    role: 'system',
+                    content: `${sysPrompt}\n\n--- CONTEXTE DU SITE NOVATECH ---\n${SITE_CONTEXT_SUMMARY}`
+                },
+                ...state.history.slice(-10).map(m => ({ role: m.role, content: m.content }))
+            ];
+
+            const payload = { model, messages, temperature: 0.4 };
+            logInspector({ OpenAIRequest: { url, model, messagesCount: messages.length } });
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            logInspector({ OpenAIResponse: data });
+
+            if (!response.ok) {
+                throw new Error(data.error?.message || `Erreur HTTP ${response.status}`);
+            }
+
+            return data.choices?.[0]?.message?.content || 'Aucune réponse générée par le modèle.';
+        }
+
+        // Journaliser dans l'inspecteur JSON du panneau de configuration
+        function logInspector(obj) {
+            const inspector = document.getElementById('network-inspector');
+            inspector.textContent = JSON.stringify(obj, null, 2);
+        }
+
+        function clearLogs() {
+            document.getElementById('network-inspector').textContent = '// Logs effacés.';
+        }
+
+        // Copier la base de connaissances dans le presse-papiers
+        function copyKnowledgeBase() {
+            const textarea = document.createElement('textarea');
+            textarea.value = SITE_CONTEXT_SUMMARY;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast('Contexte complet de NovaTech copié dans le presse-papiers !');
+        }
+
+        // Afficher une notification Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3200);
+        }
+
+        // Utilitaires de formatage sécurisé
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatSimpleMarkdown(text) {
+            let safe = escapeHtml(text);
+            safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-white">$1</strong>');
+            safe = safe.replace(/\*(.*?)\*/g, '<em class="italic text-indigo-200">$1</em>');
+            safe = safe.replace(/\n/g, '<br>');
+            return safe;
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chat-messages');
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>
